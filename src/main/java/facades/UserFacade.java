@@ -60,6 +60,8 @@ public class UserFacade {
         }
         return new UserDTO(user.getUserName(), user.getRolesAsStrings().toString());
     }
+    //TODO implement this:
+    public void refreshTokens(String username){}
     
      public void getSpotifyAuth(String userName, String code) throws IOException {
          EntityManager em = emf.createEntityManager();

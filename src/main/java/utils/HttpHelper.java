@@ -27,10 +27,12 @@ public class HttpHelper {
         con.setRequestMethod(method);
 
         headers.forEach((key,value)-> con.setRequestProperty(key, value));
-        OutputStream output = con.getOutputStream();
-        output.write(body.getBytes("UTF-8"));
-        output.close();
 
+        if(!body.equals("")){
+            OutputStream output = con.getOutputStream();
+            output.write(body.getBytes("UTF-8"));
+            output.close();
+        }
         //con.setRequestProperty("Accept", "application/json");
         // con.setRequestProperty("User-Agent", "server"); //remember if you are using SWAPI
 

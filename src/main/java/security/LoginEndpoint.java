@@ -66,7 +66,13 @@ public class LoginEndpoint {
             }
             String roles = res.length() > 0 ? res.substring(0, res.length() - 1) : "";
 
-            String token = createToken(username, user.getRolesAsStrings());
+            boolean hasSpotify = false;
+            if(user.getRefreshToken() != null){
+                hasSpotify = true;
+            }
+
+
+            String token = createToken(username, user.getRolesAsStrings(),hasSpotify);
             JsonObject responseJson = new JsonObject();
             responseJson.addProperty("username", username);
             responseJson.addProperty("roles", roles);
@@ -83,7 +89,7 @@ public class LoginEndpoint {
         throw new AuthenticationException("Invalid username or password! Please try again");
     }
 
-    private String createToken(String userName, List<String> roles) throws JOSEException {
+    private String createToken(String userName, List<String> roles, boolean hasSpotify) throws JOSEException {
 
         StringBuilder res = new StringBuilder();
         for (String string : roles) {
@@ -99,6 +105,7 @@ public class LoginEndpoint {
                 .subject(userName)
                 .claim("username", userName)
                 .claim("roles", rolesAsString)
+                .claim("hasSpotify",hasSpotify)
                 .claim("issuer", issuer)
                 .issueTime(date)
                 .expirationTime(new Date(date.getTime() + TOKEN_EXPIRE_TIME))

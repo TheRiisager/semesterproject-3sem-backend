@@ -56,7 +56,7 @@ public class SpotifyResource {
         JWTdecoder decoder = new JWTdecoder(token);
         String username = decoder.getUserName();
 
-        if(body != null) {
+        if(!body.equals("")) {
             JsonObject jsonBody = JsonParser.parseString(body).getAsJsonObject();
             String trackid = jsonBody.get("trackid").getAsString();
 

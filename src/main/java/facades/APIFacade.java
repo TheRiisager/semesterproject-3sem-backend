@@ -42,7 +42,8 @@ public class APIFacade {
         } finally {
             em.close();
         }
-        headers.put("Authorization",user.getAccessToken());
+        headers.put("Authorization", "Bearer " + user.getAccessToken());
+        headers.put("Accept", "application/json");
 
         String spotifyResponse = httpHelper.sendRequest("https://api.spotify.com/v1/me/player/currently-playing","GET",headers,"");
         JsonObject spotifyJson = JsonParser.parseString(spotifyResponse).getAsJsonObject();
@@ -57,7 +58,7 @@ public class APIFacade {
         String trackpos = spotifyJson.get("progress_ms").getAsString();
         String albumname = spotifyJson.get("item").getAsJsonObject().get("album").getAsJsonObject().get("name").getAsString();
         String trackid = spotifyJson.get("item").getAsJsonObject().get("id").getAsString();
-        String artistname = spotifyJson.get("item").getAsJsonObject().get("artists").getAsJsonArray().get(0).getAsString();
+        String artistname = spotifyJson.get("item").getAsJsonObject().get("artists").getAsJsonArray().get(0).getAsJsonObject().get("name").getAsString();
 
 
         responseJSON.addProperty("trackname",trackname);
@@ -67,8 +68,10 @@ public class APIFacade {
         responseJSON.addProperty("albumname",albumname);
         responseJSON.addProperty("trackid",trackid);
 
+        Map<String,String> lyricHeaders = new HashMap<>();
+        lyricHeaders.put("Accept", "application/json");
         String lyricURL = "https://orion.apiseeds.com/api/music/lyric/" + responseJSON.get("artistname").getAsString() + "/" + responseJSON.get("trackname").getAsString() + "?apikey=dQR4afKVHwFNzc55VF63L8JtvRXffRl0fAleRmtiErnrWaWMu3gl46LS0lg9opr6";
-        JsonObject lyricJson = JsonParser.parseString( httpHelper.sendRequest(lyricURL,"GET",new HashMap<>(),"") ).getAsJsonObject();
+        JsonObject lyricJson = JsonParser.parseString( httpHelper.sendRequest(lyricURL,"GET",lyricHeaders,"") ).getAsJsonObject();
         responseJSON.addProperty("lyrics", lyricJson.get("track").getAsJsonObject().get("text").getAsString() );
 
         return responseJSON;

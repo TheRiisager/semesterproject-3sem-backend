@@ -29,6 +29,7 @@ public class HttpHelper {
         headers.forEach((key,value)-> con.setRequestProperty(key, value));
 
         if(!body.equals("")){
+            con.setDoOutput(true);
             OutputStream output = con.getOutputStream();
             output.write(body.getBytes("UTF-8"));
             output.close();
@@ -37,11 +38,12 @@ public class HttpHelper {
         // con.setRequestProperty("User-Agent", "server"); //remember if you are using SWAPI
 
         Scanner scan = new Scanner(con.getInputStream());
-        String jsonStr = null;
-        if (scan.hasNext()) {
-            jsonStr = scan.nextLine();
+        String jsonStr = "";
+        while (scan.hasNext()) {
+            jsonStr += scan.nextLine();
         }
         scan.close();
+        System.out.println(jsonStr);
         return jsonStr;
     } 
     

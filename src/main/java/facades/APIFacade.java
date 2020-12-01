@@ -45,6 +45,7 @@ public class APIFacade {
         headers.put("Authorization", "Bearer " + user.getAccessToken());
         headers.put("Accept", "application/json");
 
+
         String spotifyResponse = httpHelper.sendRequest("https://api.spotify.com/v1/me/player/currently-playing","GET",headers,"");
         JsonObject spotifyJson = JsonParser.parseString(spotifyResponse).getAsJsonObject();
 
@@ -68,11 +69,7 @@ public class APIFacade {
         responseJSON.addProperty("albumname",albumname);
         responseJSON.addProperty("trackid",trackid);
 
-        Map<String,String> lyricHeaders = new HashMap<>();
-        lyricHeaders.put("Accept", "application/json");
-        String lyricURL = "https://orion.apiseeds.com/api/music/lyric/" + responseJSON.get("artistname").getAsString() + "/" + responseJSON.get("trackname").getAsString() + "?apikey=dQR4afKVHwFNzc55VF63L8JtvRXffRl0fAleRmtiErnrWaWMu3gl46LS0lg9opr6";
-        JsonObject lyricJson = JsonParser.parseString( httpHelper.sendRequest(lyricURL,"GET",lyricHeaders,"") ).getAsJsonObject();
-        responseJSON.addProperty("lyrics", lyricJson.get("track").getAsJsonObject().get("text").getAsString() );
+        responseJSON.addProperty("lyrics", getLyrics(responseJSON.get("artistname").getAsString(),responseJSON.get("trackname").getAsString()) );
 
         return responseJSON;
     }
@@ -114,13 +111,23 @@ public class APIFacade {
 
         String newtrackid = spotifyJson.get("item").getAsJsonObject().get("id").getAsString();
         if(!newtrackid.equals(trackid)){
-            String lyricURL = "https://orion.apiseeds.com/api/music/lyric/" + responseJSON.get("artistname").getAsString() + "/" + responseJSON.get("trackname").getAsString() + "?apikey=dQR4afKVHwFNzc55VF63L8JtvRXffRl0fAleRmtiErnrWaWMu3gl46LS0lg9opr6";
-            JsonObject lyricJson = JsonParser.parseString( httpHelper.sendRequest(lyricURL,"GET",new HashMap<>(),"") ).getAsJsonObject();
-            responseJSON.addProperty("lyrics", lyricJson.get("track").getAsJsonObject().get("text").getAsString() );
+            responseJSON.addProperty("lyrics", getLyrics(responseJSON.get("artistname").getAsString(),responseJSON.get("trackname").getAsString()) );
             responseJSON.addProperty("trackid",newtrackid);
         }
         responseJSON.addProperty("trackid",trackid);
 
         return responseJSON;
+    }
+
+    private String getLyrics(String artistName, String trackName) throws IOException {
+        HttpHelper httpHelper = new HttpHelper();
+        Map<String,String> lyricHeaders = new HashMap<>();
+
+        lyricHeaders.put("Accept", "application/json");
+        lyricHeaders.put("User-Agent", "Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:83.0) Gecko/20100101 Firefox/83.0");
+        String lyricURL = "https://orion.apiseeds.com/api/music/lyric/" + artistName + "/" + trackName + "?apikey=dQR4afKVHwFNzc55VF63L8JtvRXffRl0fAleRmtiErnrWaWMu3gl46LS0lg9opr6";
+        JsonObject lyricJson = JsonParser.parseString( httpHelper.sendRequest(lyricURL,"GET",lyricHeaders,"") ).getAsJsonObject();
+
+        return lyricJson.get("result").getAsJsonObject().get("track").getAsJsonObject().get("text").getAsString();
     }
 }

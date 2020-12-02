@@ -178,14 +178,9 @@ public class APIFacade {
         String tracklength = spotifyJson.get("item").getAsJsonObject().get("duration_ms").getAsString();
         String trackpos = spotifyJson.get("progress_ms").getAsString();
         String albumname = spotifyJson.get("item").getAsJsonObject().get("album").getAsJsonObject().get("name").getAsString();
-        String lyrics;
+        String lyrics = "";
         
-        if (!trackid.equals(spotifyJson.get("item").getAsJsonObject().get("id").getAsString())) {
-            lyrics = getLyrics(responseJSON.get("artistname").getAsString(), responseJSON.get("trackname").getAsString());
-            trackid = spotifyJson.get("item").getAsJsonObject().get("id").getAsString();
-        } else {
-            lyrics = "";
-        }
+
 
         String artistname = spotifyJson.get("item").getAsJsonObject().get("artists").getAsJsonArray().get(0).getAsJsonObject().get("name").getAsString();
 
@@ -194,8 +189,12 @@ public class APIFacade {
         responseJSON.addProperty("trackpos", trackpos);
         responseJSON.addProperty("artistname", artistname.toString());
         responseJSON.addProperty("albumname", albumname);
-        responseJSON.addProperty("trackid", trackid);
 
+        if (!trackid.equals(spotifyJson.get("item").getAsJsonObject().get("id").getAsString())) {
+            lyrics = getLyrics(responseJSON.get("artistname").getAsString(), responseJSON.get("trackname").getAsString());
+            trackid = spotifyJson.get("item").getAsJsonObject().get("id").getAsString();
+        }
+        responseJSON.addProperty("trackid", trackid);
         responseJSON.addProperty("lyrics", lyrics);
 
         return responseJSON;

@@ -34,7 +34,7 @@ public class APIFacade {
     public JsonObject getTrackInfo(String username) throws IOException {
         EntityManager em = emf.createEntityManager();
         HttpHelper httpHelper = new HttpHelper();
-        Map<String,String> headers = new HashMap<>();
+        Map<String, String> headers = new HashMap<>();
         JsonObject responseJSON = new JsonObject();
         User user;
         try {
@@ -44,16 +44,55 @@ public class APIFacade {
         }
         headers.put("Authorization", "Bearer " + user.getAccessToken());
         headers.put("Accept", "application/json");
+        JsonObject spotifyJson;
 
+        try {
+            String spotifyResponse = httpHelper.sendRequest("https://api.spotify.com/v1/me/player/currently-playing", "GET", headers, "");
+            if (spotifyResponse.equals("")) {
 
-        String spotifyResponse = httpHelper.sendRequest("https://api.spotify.com/v1/me/player/currently-playing","GET",headers,"");
-        JsonObject spotifyJson = JsonParser.parseString(spotifyResponse).getAsJsonObject();
+                spotifyJson = new JsonObject();
 
-        if(spotifyJson.has("status")){
-            userFacade.refreshTokens(username);
-            spotifyResponse = httpHelper.sendRequest("https://api.spotify.com/v1/me/player/currently-playing","GET",headers,"");
+                spotifyJson.addProperty("trackname", "");
+                spotifyJson.addProperty("tracklength", "");
+                spotifyJson.addProperty("trackpos", "");
+                spotifyJson.addProperty("artistname", "");
+                spotifyJson.addProperty("albumname", "");
+                spotifyJson.addProperty("trackid", "");
+                spotifyJson.addProperty("lyrics", "");
+
+                return spotifyJson;
+
+            }
             spotifyJson = JsonParser.parseString(spotifyResponse).getAsJsonObject();
+
+            if (spotifyJson.has("status")) {
+                userFacade.refreshTokens(username);
+                spotifyResponse = httpHelper.sendRequest("https://api.spotify.com/v1/me/player/currently-playing", "GET", headers, "");
+
+                if (spotifyResponse.equals("")) {
+
+                    spotifyJson = new JsonObject();
+
+                    spotifyJson.addProperty("trackname", "");
+                    spotifyJson.addProperty("tracklength", "");
+                    spotifyJson.addProperty("trackpos", "");
+                    spotifyJson.addProperty("artistname", "");
+                    spotifyJson.addProperty("albumname", "");
+                    spotifyJson.addProperty("trackid", "");
+                    spotifyJson.addProperty("lyrics", "");
+
+                    return spotifyJson;
+
+                }
+                spotifyJson = JsonParser.parseString(spotifyResponse).getAsJsonObject();
+            }
+        } catch (IOException e) {
+
+            spotifyJson = new JsonObject();
+            spotifyJson.addProperty("error", e.getLocalizedMessage());
+            return spotifyJson;
         }
+
         String trackname = spotifyJson.get("item").getAsJsonObject().get("name").getAsString();
         String tracklength = spotifyJson.get("item").getAsJsonObject().get("duration_ms").getAsString();
         String trackpos = spotifyJson.get("progress_ms").getAsString();
@@ -61,15 +100,14 @@ public class APIFacade {
         String trackid = spotifyJson.get("item").getAsJsonObject().get("id").getAsString();
         String artistname = spotifyJson.get("item").getAsJsonObject().get("artists").getAsJsonArray().get(0).getAsJsonObject().get("name").getAsString();
 
+        responseJSON.addProperty("trackname", trackname);
+        responseJSON.addProperty("tracklength", tracklength);
+        responseJSON.addProperty("trackpos", trackpos);
+        responseJSON.addProperty("artistname", artistname.toString());
+        responseJSON.addProperty("albumname", albumname);
+        responseJSON.addProperty("trackid", trackid);
 
-        responseJSON.addProperty("trackname",trackname);
-        responseJSON.addProperty("tracklength",tracklength);
-        responseJSON.addProperty("trackpos",trackpos);
-        responseJSON.addProperty("artistname",artistname.toString());
-        responseJSON.addProperty("albumname",albumname);
-        responseJSON.addProperty("trackid",trackid);
-
-        responseJSON.addProperty("lyrics", getLyrics(responseJSON.get("artistname").getAsString(),responseJSON.get("trackname").getAsString()) );
+        responseJSON.addProperty("lyrics", getLyrics(responseJSON.get("artistname").getAsString(), responseJSON.get("trackname").getAsString()));
 
         return responseJSON;
     }
@@ -77,7 +115,7 @@ public class APIFacade {
     public JsonObject getTrackInfo(String username, String trackid) throws IOException {
         EntityManager em = emf.createEntityManager();
         HttpHelper httpHelper = new HttpHelper();
-        Map<String,String> headers = new HashMap<>();
+        Map<String, String> headers = new HashMap<>();
         JsonObject responseJSON = new JsonObject();
         User user;
         try {
@@ -85,49 +123,98 @@ public class APIFacade {
         } finally {
             em.close();
         }
-        headers.put("Authorization",user.getAccessToken());
+        headers.put("Authorization", "Bearer " + user.getAccessToken());
+        headers.put("Accept", "application/json");
+        JsonObject spotifyJson;
 
-        String spotifyResponse = httpHelper.sendRequest("https://api.spotify.com/v1/me/player/currently-playing","GET",headers,"");
-        JsonObject spotifyJson = JsonParser.parseString(spotifyResponse).getAsJsonObject();
+        try {
+            String spotifyResponse = httpHelper.sendRequest("https://api.spotify.com/v1/me/player/currently-playing", "GET", headers, "");
+            if (spotifyResponse.equals("")) {
 
-        if(spotifyJson.has("status")){
-            userFacade.refreshTokens(username);
-            spotifyResponse = httpHelper.sendRequest("https://api.spotify.com/v1/me/player/currently-playing","GET",headers,"");
+                spotifyJson = new JsonObject();
+
+                spotifyJson.addProperty("trackname", "");
+                spotifyJson.addProperty("tracklength", "");
+                spotifyJson.addProperty("trackpos", "");
+                spotifyJson.addProperty("artistname", "");
+                spotifyJson.addProperty("albumname", "");
+                spotifyJson.addProperty("trackid", "");
+                spotifyJson.addProperty("lyrics", "");
+
+                return spotifyJson;
+
+            }
             spotifyJson = JsonParser.parseString(spotifyResponse).getAsJsonObject();
+
+            if (spotifyJson.has("status")) {
+                userFacade.refreshTokens(username);
+                spotifyResponse = httpHelper.sendRequest("https://api.spotify.com/v1/me/player/currently-playing", "GET", headers, "");
+
+                if (spotifyResponse.equals("")) {
+
+                    spotifyJson = new JsonObject();
+
+                    spotifyJson.addProperty("trackname", "");
+                    spotifyJson.addProperty("tracklength", "");
+                    spotifyJson.addProperty("trackpos", "");
+                    spotifyJson.addProperty("artistname", "");
+                    spotifyJson.addProperty("albumname", "");
+                    spotifyJson.addProperty("trackid", "");
+                    spotifyJson.addProperty("lyrics", "");
+
+                    return spotifyJson;
+
+                }
+                spotifyJson = JsonParser.parseString(spotifyResponse).getAsJsonObject();
+            }
+        } catch (IOException e) {
+
+            spotifyJson = new JsonObject();
+            spotifyJson.addProperty("error", e.getLocalizedMessage());
+            return spotifyJson;
         }
 
         String trackname = spotifyJson.get("item").getAsJsonObject().get("name").getAsString();
         String tracklength = spotifyJson.get("item").getAsJsonObject().get("duration_ms").getAsString();
         String trackpos = spotifyJson.get("progress_ms").getAsString();
         String albumname = spotifyJson.get("item").getAsJsonObject().get("album").getAsJsonObject().get("name").getAsString();
-        String artistname = spotifyJson.get("item").getAsJsonObject().get("artists").getAsJsonArray().get(0).getAsString();
-
-
-        responseJSON.addProperty("trackname",trackname);
-        responseJSON.addProperty("tracklength",tracklength);
-        responseJSON.addProperty("trackpos",trackpos);
-        responseJSON.addProperty("artistname",artistname.toString());
-        responseJSON.addProperty("albumname",albumname);
-
-        String newtrackid = spotifyJson.get("item").getAsJsonObject().get("id").getAsString();
-        if(!newtrackid.equals(trackid)){
-            responseJSON.addProperty("lyrics", getLyrics(responseJSON.get("artistname").getAsString(),responseJSON.get("trackname").getAsString()) );
-            responseJSON.addProperty("trackid",newtrackid);
+        String lyrics;
+        
+        if (!trackid.equals(spotifyJson.get("item").getAsJsonObject().get("id").getAsString())) {
+            lyrics = getLyrics(responseJSON.get("artistname").getAsString(), responseJSON.get("trackname").getAsString());
+            trackid = spotifyJson.get("item").getAsJsonObject().get("id").getAsString();
+        } else {
+            lyrics = "";
         }
-        responseJSON.addProperty("trackid",trackid);
+
+        String artistname = spotifyJson.get("item").getAsJsonObject().get("artists").getAsJsonArray().get(0).getAsJsonObject().get("name").getAsString();
+
+        responseJSON.addProperty("trackname", trackname);
+        responseJSON.addProperty("tracklength", tracklength);
+        responseJSON.addProperty("trackpos", trackpos);
+        responseJSON.addProperty("artistname", artistname.toString());
+        responseJSON.addProperty("albumname", albumname);
+        responseJSON.addProperty("trackid", trackid);
+
+        responseJSON.addProperty("lyrics", lyrics);
 
         return responseJSON;
     }
 
-    private String getLyrics(String artistName, String trackName) throws IOException {
+    private String getLyrics(String artistName, String trackName) {
         HttpHelper httpHelper = new HttpHelper();
-        Map<String,String> lyricHeaders = new HashMap<>();
+        Map<String, String> lyricHeaders = new HashMap<>();
 
+        JsonObject lyricJson;
         lyricHeaders.put("Accept", "application/json");
         lyricHeaders.put("User-Agent", "Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:83.0) Gecko/20100101 Firefox/83.0");
-        String lyricURL = "https://orion.apiseeds.com/api/music/lyric/" + artistName + "/" + trackName + "?apikey=dQR4afKVHwFNzc55VF63L8JtvRXffRl0fAleRmtiErnrWaWMu3gl46LS0lg9opr6";
-        JsonObject lyricJson = JsonParser.parseString( httpHelper.sendRequest(lyricURL,"GET",lyricHeaders,"") ).getAsJsonObject();
+        try {
 
-        return lyricJson.get("result").getAsJsonObject().get("track").getAsJsonObject().get("text").getAsString();
+            String lyricURL = "https://orion.apiseeds.com/api/music/lyric/" + artistName + "/" + trackName + "?apikey=dQR4afKVHwFNzc55VF63L8JtvRXffRl0fAleRmtiErnrWaWMu3gl46LS0lg9opr6";
+            lyricJson = JsonParser.parseString(httpHelper.sendRequest(lyricURL, "GET", lyricHeaders, "")).getAsJsonObject();
+            return lyricJson.get("result").getAsJsonObject().get("track").getAsJsonObject().get("text").getAsString();
+        } catch (IOException e) {
+            return "NO_DATA";
+        }
     }
 }

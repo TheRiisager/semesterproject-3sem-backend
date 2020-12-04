@@ -24,6 +24,7 @@ import javax.ws.rs.Path;
 import facades.UserFacade;
 import utils.APIFetcher;
 import utils.EMF_Creator;
+import utils.SetupTestUsers;
 
 /**
  * @author lam@cphbusiness.dk
@@ -92,6 +93,13 @@ public class DemoResource {
     public String getFromAdmin() {
         String thisuser = securityContext.getUserPrincipal().getName();
         return "{\"msg\": \"Hello to (admin) User: " + thisuser + "\"}";
+    }
+
+    @Path("obscurity/WADAWDWFAWFGWAGAWGW/nogoherepls/setupUsers")
+    @GET
+    public String setupUsers(){
+        SetupTestUsers.setupTestUsers();
+        return "Users set up";
     }
 
     @GET

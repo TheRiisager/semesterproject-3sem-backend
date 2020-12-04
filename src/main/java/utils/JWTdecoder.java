@@ -3,6 +3,7 @@ package utils;
 
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
+import java.util.Base64.Decoder;
 import javax.json.Json;
 
 /**
@@ -20,7 +21,7 @@ public class JWTdecoder {
 
     public JWTdecoder(String token) {
         
-      java.util.Base64.Decoder decoder = java.util.Base64.getUrlDecoder();
+      Decoder decoder = java.util.Base64.getUrlDecoder();
       String[] parts = token.split("\\."); 
      
       this.header = new String (decoder.decode(parts[0]));  

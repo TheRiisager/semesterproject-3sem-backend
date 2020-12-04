@@ -3,6 +3,8 @@ package facades;
 import dtos.UserDTO;
 import entities.User;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
+import java.util.Base64;
 import java.util.HashMap;
 import java.util.Map;
 import javax.persistence.EntityManager;
@@ -61,7 +63,40 @@ public class UserFacade {
         return new UserDTO(user.getUserName(), user.getRolesAsStrings().toString());
     }
     //TODO implement this:
-    public void refreshTokens(String username){}
+    public void refreshTokens(String username){
+        Base64.Encoder encoder = Base64.getEncoder();
+        EntityManager em = emf.createEntityManager();
+        Map<String, String> headers = new HashMap<>();
+        headers.put("content-Type", "application/x-www-form-urlencoded");
+        headers.put("Accept", "application/json");
+        String authString = "f382ba93a1794be4b700ddcbf6bfe068:b2936ccce2534ec694a135eb4d42444c";
+        headers.put("Authorization","Basic " + encoder.encodeToString(authString.getBytes(StandardCharsets.UTF_8)));
+        HttpHelper httpHelper = new HttpHelper();
+        User user;
+        try {
+            user = em.find(User.class, username);
+
+            String requestBody = "grant_type=refresh_token&refresh_token=" + user.getRefreshToken();
+            try {
+                String response = httpHelper.sendRequest("https://accounts.spotify.com/api/token","GET",headers,requestBody);
+                JsonObject responseJson = JsonParser.parseString(response).getAsJsonObject();
+                em.getTransaction().begin();
+                user.setAccessToken(responseJson.get("access_token").getAsString());
+                if(responseJson.has("refresh_token")){
+                    user.setRefreshToken(responseJson.get("refresh_token").getAsString());
+                }
+                em.merge(user);
+                em.getTransaction().commit();
+
+            } catch (IOException e){
+                System.out.println("Could not refresh token for user: " + user.getUserName());
+            }
+
+        } finally {
+            em.close();
+        }
+
+    }
     
      public void getSpotifyAuth(String userName, String code) throws IOException {
          EntityManager em = emf.createEntityManager();

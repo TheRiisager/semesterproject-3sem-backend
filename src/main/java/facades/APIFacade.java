@@ -9,6 +9,9 @@ import utils.HttpHelper;
 import javax.persistence.EntityManager;
 import javax.persistence.EntityManagerFactory;
 import java.io.IOException;
+import java.net.Inet4Address;
+import java.net.InetAddress;
+import java.net.UnknownHostException;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicReference;
@@ -31,7 +34,104 @@ public class APIFacade {
         return instance;
     }
 
-    public JsonObject getTrackInfo(String username) throws IOException {
+    public void playSpotify(String username, boolean triedRefresh) {
+        HttpHelper httpHelper = new HttpHelper();
+        EntityManager em = emf.createEntityManager();
+        Map<String, String> headers = new HashMap<>();
+        User user;
+        try {
+            user = em.find(User.class, username);
+        } finally {
+            em.close();
+        }
+        headers.put("Authorization", "Bearer " + user.getAccessToken());
+        headers.put("Content-Length", "0");
+
+        try {
+            httpHelper.sendRequest("https://api.spotify.com/v1/me/player/play","PUT",headers,"");
+        } catch (IOException e) {
+            if(triedRefresh) {
+                System.out.println("Could not alter playback of users spotify. User: " + user.getUserName() + ". Error: " + e.getLocalizedMessage());
+            } else {
+                userFacade.refreshTokens(username);
+                playSpotify(username,true);
+            }
+        }
+    }
+
+    public void pauseSpotify(String username,boolean triedRefresh){
+        HttpHelper httpHelper = new HttpHelper();
+        EntityManager em = emf.createEntityManager();
+        Map<String, String> headers = new HashMap<>();
+        User user;
+        try {
+            user = em.find(User.class, username);
+        } finally {
+            em.close();
+        }
+        headers.put("Authorization", "Bearer " + user.getAccessToken());
+        headers.put("Content-Length", "0");
+        try {
+            httpHelper.sendRequest("https://api.spotify.com/v1/me/player/pause","PUT",headers,"");
+        } catch (IOException e) {
+            if(triedRefresh) {
+                System.out.println("Could not alter playback of users spotify. User: " + user.getUserName() + ". Error: " + e.getLocalizedMessage() + ". headers: " + headers.toString());
+            } else {
+                userFacade.refreshTokens(username);
+                pauseSpotify(username,true);
+            }
+        }
+    }
+
+    public void nextSpotifyTrack(String username,boolean triedRefresh){
+        HttpHelper httpHelper = new HttpHelper();
+        EntityManager em = emf.createEntityManager();
+        Map<String, String> headers = new HashMap<>();
+        User user;
+        try {
+            user = em.find(User.class, username);
+        } finally {
+            em.close();
+        }
+        headers.put("Authorization", "Bearer " + user.getAccessToken());
+        headers.put("Content-Length", "0");
+        try {
+            httpHelper.sendRequest("https://api.spotify.com/v1/me/player/next","POST",headers,"");
+        } catch (IOException e) {
+            if(triedRefresh) {
+                System.out.println("Could not alter playback of users spotify. User: " + user.getUserName() + ". Error: " + e.getLocalizedMessage());
+            } else {
+                userFacade.refreshTokens(username);
+                nextSpotifyTrack(username,true);
+            }
+        }
+    }
+
+    public void prevSpotifyTrack(String username,boolean triedRefresh){
+        HttpHelper httpHelper = new HttpHelper();
+        EntityManager em = emf.createEntityManager();
+        Map<String, String> headers = new HashMap<>();
+        User user;
+        try {
+            user = em.find(User.class, username);
+        } finally {
+            em.close();
+        }
+        headers.put("Authorization", "Bearer " + user.getAccessToken());
+        headers.put("Content-Length", "0");
+        try {
+            httpHelper.sendRequest("https://api.spotify.com/v1/me/player/previous","POST",headers,"");
+        } catch (IOException e) {
+            if(triedRefresh) {
+                System.out.println("Could not alter playback of users spotify. User: " + user.getUserName() + ". Error: " + e.getLocalizedMessage());
+            } else {
+                userFacade.refreshTokens(username);
+                prevSpotifyTrack(username,true);
+            }
+        }
+    }
+
+    public JsonObject getTrackInfo(String username, boolean triedRefresh) throws IOException {
         EntityManager em = emf.createEntityManager();
         HttpHelper httpHelper = new HttpHelper();
         Map<String, String> headers = new HashMap<>();
@@ -49,9 +149,7 @@ public class APIFacade {
         try {
             String spotifyResponse = httpHelper.sendRequest("https://api.spotify.com/v1/me/player/currently-playing", "GET", headers, "");
             if (spotifyResponse.equals("")) {
-
                 spotifyJson = new JsonObject();
-
                 spotifyJson.addProperty("trackname", "");
                 spotifyJson.addProperty("tracklength", "");
                 spotifyJson.addProperty("trackpos", "");
@@ -59,38 +157,19 @@ public class APIFacade {
                 spotifyJson.addProperty("albumname", "");
                 spotifyJson.addProperty("trackid", "");
                 spotifyJson.addProperty("lyrics", "");
-
                 return spotifyJson;
-
             }
             spotifyJson = JsonParser.parseString(spotifyResponse).getAsJsonObject();
 
-            if (spotifyJson.has("status")) {
-                userFacade.refreshTokens(username);
-                spotifyResponse = httpHelper.sendRequest("https://api.spotify.com/v1/me/player/currently-playing", "GET", headers, "");
-
-                if (spotifyResponse.equals("")) {
-
-                    spotifyJson = new JsonObject();
-
-                    spotifyJson.addProperty("trackname", "");
-                    spotifyJson.addProperty("tracklength", "");
-                    spotifyJson.addProperty("trackpos", "");
-                    spotifyJson.addProperty("artistname", "");
-                    spotifyJson.addProperty("albumname", "");
-                    spotifyJson.addProperty("trackid", "");
-                    spotifyJson.addProperty("lyrics", "");
-
-                    return spotifyJson;
-
-                }
-                spotifyJson = JsonParser.parseString(spotifyResponse).getAsJsonObject();
-            }
         } catch (IOException e) {
-
             spotifyJson = new JsonObject();
-            spotifyJson.addProperty("error", e.getLocalizedMessage());
-            return spotifyJson;
+            if(triedRefresh){
+                spotifyJson.addProperty("error", e.getLocalizedMessage());
+                return spotifyJson;
+            } else {
+                userFacade.refreshTokens(username);
+                return getTrackInfo(username,true);
+            }
         }
 
         String trackname = spotifyJson.get("item").getAsJsonObject().get("name").getAsString();
@@ -106,13 +185,12 @@ public class APIFacade {
         responseJSON.addProperty("artistname", artistname.toString());
         responseJSON.addProperty("albumname", albumname);
         responseJSON.addProperty("trackid", trackid);
-
         responseJSON.addProperty("lyrics", getLyrics(responseJSON.get("artistname").getAsString(), responseJSON.get("trackname").getAsString()));
 
         return responseJSON;
     }
 
-    public JsonObject getTrackInfo(String username, String trackid) throws IOException {
+    public JsonObject getTrackInfo(String username, String trackid,boolean triedRefresh) throws IOException {
         EntityManager em = emf.createEntityManager();
         HttpHelper httpHelper = new HttpHelper();
         Map<String, String> headers = new HashMap<>();
@@ -146,32 +224,15 @@ public class APIFacade {
             }
             spotifyJson = JsonParser.parseString(spotifyResponse).getAsJsonObject();
 
-            if (spotifyJson.has("status")) {
-                userFacade.refreshTokens(username);
-                spotifyResponse = httpHelper.sendRequest("https://api.spotify.com/v1/me/player/currently-playing", "GET", headers, "");
-
-                if (spotifyResponse.equals("")) {
-
-                    spotifyJson = new JsonObject();
-
-                    spotifyJson.addProperty("trackname", "");
-                    spotifyJson.addProperty("tracklength", "");
-                    spotifyJson.addProperty("trackpos", "");
-                    spotifyJson.addProperty("artistname", "");
-                    spotifyJson.addProperty("albumname", "");
-                    spotifyJson.addProperty("trackid", "");
-                    spotifyJson.addProperty("lyrics", "");
-
-                    return spotifyJson;
-
-                }
-                spotifyJson = JsonParser.parseString(spotifyResponse).getAsJsonObject();
-            }
         } catch (IOException e) {
-
             spotifyJson = new JsonObject();
-            spotifyJson.addProperty("error", e.getLocalizedMessage());
-            return spotifyJson;
+            if(triedRefresh) {
+                spotifyJson.addProperty("error", e.getLocalizedMessage());
+                return spotifyJson;
+            } else {
+                userFacade.refreshTokens(username);
+                return getTrackInfo(username,trackid,true);
+            }
         }
 
         String trackname = spotifyJson.get("item").getAsJsonObject().get("name").getAsString();

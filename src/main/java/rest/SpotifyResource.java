@@ -10,12 +10,7 @@ import utils.EMF_Creator;
 import facades.FacadeExample;
 import javax.annotation.security.RolesAllowed;
 import javax.persistence.EntityManagerFactory;
-import javax.ws.rs.Consumes;
-import javax.ws.rs.GET;
-import javax.ws.rs.HeaderParam;
-import javax.ws.rs.POST;
-import javax.ws.rs.Path;
-import javax.ws.rs.Produces;
+import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
@@ -60,13 +55,50 @@ public class SpotifyResource {
             JsonObject jsonBody = JsonParser.parseString(body).getAsJsonObject();
             String trackid = jsonBody.get("trackid").getAsString();
 
-            JsonObject responseJSON = API_FACADE.getTrackInfo(username,trackid);
+            JsonObject responseJSON = API_FACADE.getTrackInfo(username,trackid,false);
+            System.out.println(responseJSON.toString());
             return Response.ok(GSON.toJson(responseJSON)).build();
         }
 
 
-        JsonObject responseJSON = API_FACADE.getTrackInfo(username);
+        JsonObject responseJSON = API_FACADE.getTrackInfo(username, false);
         return Response.ok(GSON.toJson(responseJSON)).build();
+    }
+
+    @Path("play")
+    @PUT
+    @RolesAllowed("user")
+    public void playSpotify(@HeaderParam("x-access-token") String token){
+        JWTdecoder decoder = new JWTdecoder(token);
+        String username = decoder.getUserName();
+        API_FACADE.playSpotify(username,false);
+    }
+
+    @Path("pause")
+    @PUT
+    @RolesAllowed("user")
+    public void pauseSpotify(@HeaderParam("x-access-token") String token){
+        JWTdecoder decoder = new JWTdecoder(token);
+        String username = decoder.getUserName();
+        API_FACADE.pauseSpotify(username,false);
+    }
+
+    @Path("next")
+    @POST
+    @RolesAllowed("user")
+    public void nextSpotifyTrack(@HeaderParam("x-access-token") String token){
+        JWTdecoder decoder = new JWTdecoder(token);
+        String username = decoder.getUserName();
+        API_FACADE.nextSpotifyTrack(username,false);
+    }
+
+    @Path("previous")
+    @POST
+    @RolesAllowed("user")
+    public void previousSpotifyTrack(@HeaderParam("x-access-token") String token){
+        JWTdecoder decoder = new JWTdecoder(token);
+        String username = decoder.getUserName();
+        API_FACADE.prevSpotifyTrack(username,false);
     }
 
 }

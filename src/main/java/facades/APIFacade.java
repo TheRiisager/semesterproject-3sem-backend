@@ -46,6 +46,7 @@ public class APIFacade {
         }
         headers.put("Authorization", "Bearer " + user.getAccessToken());
         headers.put("Content-Length", "0");
+        headers.put("Host","87.50.6.250:8080");
 
         try {
             httpHelper.sendRequest("https://api.spotify.com/v1/me/player/play","PUT",headers,"");

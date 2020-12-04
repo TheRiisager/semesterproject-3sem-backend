@@ -18,14 +18,18 @@ public class HttpHelper {
 
     public HttpHelper() {
     }
-    
-    
+
     public String sendRequest(String _url, String method, Map<String, String> headers, String body) throws MalformedURLException, IOException {
         URL url = new URL(_url);
         HttpURLConnection con = (HttpURLConnection) url.openConnection();
         con.setRequestMethod(method);
-        con.setDoOutput(false);
-        //byte[] bytes =
+        con.setDoOutput(true);
+        if(headers.containsKey("Content-Length")){
+            if(headers.get("Content-Length").equals("0")){
+                con.setFixedLengthStreamingMode(0);
+                headers.remove("Content-Length");
+            }
+        }
         headers.forEach((key,value)-> con.setRequestProperty(key, value));
 
 
@@ -42,7 +46,7 @@ public class HttpHelper {
             jsonStr += scan.nextLine();
         }
         scan.close();
-        System.out.println(con.getHeaderField("Content-Length"));
+        System.out.println("content length:" +con.getHeaderField("Content-Length"));
         return jsonStr;
     } 
     

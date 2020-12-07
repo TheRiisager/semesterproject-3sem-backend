@@ -67,10 +67,9 @@ public class LoginEndpoint {
             String roles = res.length() > 0 ? res.substring(0, res.length() - 1) : "";
 
             boolean hasSpotify = false;
-            if(user.getRefreshToken() != null){
+            if(user.getRefreshToken() != null || !user.getRefreshToken().equals("")){
                 hasSpotify = true;
             }
-
 
             String token = createToken(username, user.getRolesAsStrings(),hasSpotify);
             JsonObject responseJson = new JsonObject();

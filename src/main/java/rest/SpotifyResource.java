@@ -30,7 +30,7 @@ public class SpotifyResource {
 
     @Path("auth")
     @POST
-    @Consumes(MediaType.APPLICATION_JSON)
+    @Consumes({MediaType.APPLICATION_JSON})
     @Produces({MediaType.APPLICATION_JSON})
     @RolesAllowed("user")
     public void spotifyAuthUser(@HeaderParam("x-access-token") String token, String body) throws IOException {
@@ -52,8 +52,8 @@ public class SpotifyResource {
     }
 
     @Path("trackinfo")
-    @GET
-    @Consumes(MediaType.APPLICATION_JSON)
+    @POST
+    @Consumes({MediaType.APPLICATION_JSON})
     @RolesAllowed("user")
     public Response getTrackInfo(@HeaderParam("x-access-token") String token, String body) throws IOException {
         JWTdecoder decoder = new JWTdecoder(token);

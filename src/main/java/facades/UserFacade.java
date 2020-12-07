@@ -98,15 +98,21 @@ public class UserFacade {
 
     }
     
-     public void getSpotifyAuth(String userName, String code) throws IOException {
+     public void getSpotifyAuth(String userName, String code,boolean fromAndroid) throws IOException {
          EntityManager em = emf.createEntityManager();
          User user;
+         String redirect;
+         if(fromAndroid){
+             redirect = "http%3A%2F%2Flocalhost%3A8888%2Fcallback";
+         } else {
+             redirect = "http%3A%2F%2Flocalhost%3A3000%2F";
+         }
          
          Map<String, String> headers = new HashMap<>();
          headers.put("content-Type", "application/x-www-form-urlencoded");
          headers.put("Accept", "application/json");
          HttpHelper httpHelper = new HttpHelper();
-         String requestBody = "grant_type=authorization_code&code=" + code + "&redirect_uri=http%3A%2F%2Flocalhost%3A3000%2F&client_id=f382ba93a1794be4b700ddcbf6bfe068&client_secret=b2936ccce2534ec694a135eb4d42444c";
+         String requestBody = "grant_type=authorization_code&code=" + code + "&redirect_uri=" + redirect +"&client_id=f382ba93a1794be4b700ddcbf6bfe068&client_secret=b2936ccce2534ec694a135eb4d42444c";
          String result = httpHelper.sendRequest("https://accounts.spotify.com/api/token", "POST", headers, requestBody);
 
          JsonObject responseJson = JsonParser.parseString(result).getAsJsonObject();

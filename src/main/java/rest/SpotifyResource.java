@@ -40,7 +40,15 @@ public class SpotifyResource {
         JWTdecoder decoder = new JWTdecoder(token);
         String username = decoder.getUserName();
 
-        USER_FACADE.getSpotifyAuth(username,code);
+        if(jsonBody.has("Identifier")){
+            if(jsonBody.get("Identifier").getAsString().equals("ANDROID")){
+                USER_FACADE.getSpotifyAuth(username, code,true);
+            } else {
+                USER_FACADE.getSpotifyAuth(username, code,false);
+            }
+        } else {
+            USER_FACADE.getSpotifyAuth(username, code,false);
+        }
     }
 
     @Path("trackinfo")

@@ -28,8 +28,8 @@ public class JWTdecoder {
       this.body = new String (decoder.decode(parts[1]));
       this.signature = new String (decoder.decode(parts[2]));
    
-        JsonObject jsonBody = JsonParser.parseString(body).getAsJsonObject();
-       this.userName = jsonBody.get("username").getAsString();
+      JsonObject jsonBody = JsonParser.parseString(body).getAsJsonObject();
+      this.userName = jsonBody.get("username").getAsString();
         
     }
 

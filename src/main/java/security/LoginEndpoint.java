@@ -67,7 +67,7 @@ public class LoginEndpoint {
             String roles = res.length() > 0 ? res.substring(0, res.length() - 1) : "";
 
             boolean hasSpotify = false;
-            if(user.getRefreshToken() != null || !user.getRefreshToken().equals("")){
+            if(user.getRefreshToken() != null){
                 hasSpotify = true;
             }
 

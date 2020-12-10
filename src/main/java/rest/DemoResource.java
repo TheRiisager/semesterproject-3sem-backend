@@ -2,6 +2,7 @@ package rest;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
+import com.nimbusds.jwt.JWT;
 import dtos.UserDTO;
 import entities.User;
 
@@ -15,15 +16,13 @@ import javax.annotation.security.RolesAllowed;
 import javax.persistence.EntityManager;
 import javax.persistence.EntityManagerFactory;
 import javax.persistence.TypedQuery;
-import javax.ws.rs.PathParam;
+import javax.ws.rs.*;
 import javax.ws.rs.core.*;
-import javax.ws.rs.Produces;
-import javax.ws.rs.GET;
-import javax.ws.rs.Path;
 
 import facades.UserFacade;
 import utils.APIFetcher;
 import utils.EMF_Creator;
+import utils.JWTdecoder;
 import utils.SetupTestUsers;
 
 /**
@@ -100,6 +99,14 @@ public class DemoResource {
     public String setupUsers(){
         SetupTestUsers.setupTestUsers();
         return "Users set up";
+    }
+
+    @Path("resetTokens")
+    @GET
+    @RolesAllowed("user")
+    public void resetTokens(@HeaderParam("x-access-token") String token){
+        JWTdecoder decoder = new JWTdecoder(token);
+        FACADE.resetUserTokens(decoder.getUserName());
     }
 
     @GET

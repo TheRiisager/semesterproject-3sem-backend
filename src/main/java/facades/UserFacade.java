@@ -62,7 +62,22 @@ public class UserFacade {
         }
         return new UserDTO(user.getUserName(), user.getRolesAsStrings().toString());
     }
-    //TODO implement this:
+
+    public void resetUserTokens(String username){
+        EntityManager em = emf.createEntityManager();
+        try {
+            User user = em.find(User.class,username);
+
+            em.getTransaction().begin();
+            user.setAccessToken(null);
+            user.setRefreshToken(null);
+            em.merge(user);
+            em.getTransaction().commit();
+        } finally {
+            em.close();
+        }
+    }
+
     public void refreshTokens(String username){
         Base64.Encoder encoder = Base64.getEncoder();
         EntityManager em = emf.createEntityManager();
@@ -98,7 +113,7 @@ public class UserFacade {
 
     }
     
-     public void getSpotifyAuth(String userName, String code,boolean fromAndroid) throws IOException {
+     public JsonObject getSpotifyAuth(String userName, String code,boolean fromAndroid) throws IOException {
          EntityManager em = emf.createEntityManager();
          User user;
          String redirect;
@@ -112,8 +127,15 @@ public class UserFacade {
          headers.put("content-Type", "application/x-www-form-urlencoded");
          headers.put("Accept", "application/json");
          HttpHelper httpHelper = new HttpHelper();
-         String requestBody = "grant_type=authorization_code&code=" + code + "&redirect_uri=" + redirect +"&client_id=f382ba93a1794be4b700ddcbf6bfe068&client_secret=b2936ccce2534ec694a135eb4d42444c";
-         String result = httpHelper.sendRequest("https://accounts.spotify.com/api/token", "POST", headers, requestBody);
+         String result;
+         try {
+             String requestBody = "grant_type=authorization_code&code=" + code + "&redirect_uri=" + redirect + "&client_id=f382ba93a1794be4b700ddcbf6bfe068&client_secret=b2936ccce2534ec694a135eb4d42444c";
+             result = httpHelper.sendRequest("https://accounts.spotify.com/api/token", "POST", headers, requestBody);
+         } catch (IOException e){
+             JsonObject error = new JsonObject();
+             error.addProperty("error",e.getLocalizedMessage());
+             return error;
+         }
 
          JsonObject responseJson = JsonParser.parseString(result).getAsJsonObject();
          
@@ -130,6 +152,10 @@ public class UserFacade {
         } finally {
             em.close();
         }
+
+         JsonObject msg = new JsonObject();
+         msg.addProperty("msg","authentication successful");
+         return msg;
 
 }
     

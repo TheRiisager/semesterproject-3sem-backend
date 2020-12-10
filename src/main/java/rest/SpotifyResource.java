@@ -33,21 +33,26 @@ public class SpotifyResource {
     @Consumes({MediaType.APPLICATION_JSON})
     @Produces({MediaType.APPLICATION_JSON})
     @RolesAllowed("user")
-    public void spotifyAuthUser(@HeaderParam("x-access-token") String token, String body) throws IOException {
+    public Response spotifyAuthUser(@HeaderParam("x-access-token") String token, String body) throws IOException {
         System.out.println("Received request. Token: " + token + ". Request body: " + body);
         JsonObject jsonBody = JsonParser.parseString(body).getAsJsonObject();
         String code = jsonBody.get("code").getAsString();
         JWTdecoder decoder = new JWTdecoder(token);
         String username = decoder.getUserName();
+        JsonObject response;
 
         if(jsonBody.has("Identifier")){
             if(jsonBody.get("Identifier").getAsString().equals("ANDROID")){
-                USER_FACADE.getSpotifyAuth(username, code,true);
+                response = USER_FACADE.getSpotifyAuth(username, code,true);
+                return Response.ok(GSON.toJson(response)).build();
+
             } else {
-                USER_FACADE.getSpotifyAuth(username, code,false);
+                response = USER_FACADE.getSpotifyAuth(username, code,false);
+                return Response.ok(GSON.toJson(response)).build();
             }
         } else {
-            USER_FACADE.getSpotifyAuth(username, code,false);
+            response = USER_FACADE.getSpotifyAuth(username, code,false);
+            return Response.ok(GSON.toJson(response)).build();
         }
     }
 
@@ -67,7 +72,6 @@ public class SpotifyResource {
             System.out.println(responseJSON.toString());
             return Response.ok(GSON.toJson(responseJSON)).build();
         }
-
 
         JsonObject responseJSON = API_FACADE.getTrackInfo(username, false);
         return Response.ok(GSON.toJson(responseJSON)).build();

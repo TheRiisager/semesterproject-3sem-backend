@@ -240,7 +240,7 @@ public class APIFacade {
         String tracklength = spotifyJson.get("item").getAsJsonObject().get("duration_ms").getAsString();
         String trackpos = spotifyJson.get("progress_ms").getAsString();
         String albumname = spotifyJson.get("item").getAsJsonObject().get("album").getAsJsonObject().get("name").getAsString();
-        String lyrics = "";
+        String lyrics = "NO_UPDATE";
         
 
 
